@@ -1,4 +1,3 @@
-# SQL-Oracle
 --sql oracle
 --Day1 01. Introduction to Oracle
 /* 관계형 데이터 베이스: 엑셀 시트 형태의 테이블 모음
@@ -37,4 +36,32 @@
  in (값 나열) : 값 리스트 중 일치하는 값 검색
  like '문자데이터%(글자수 지정안함) or 문자데이터_(한글자 의미)' : 특정 단어 포함한 데이터값 구하기 즉, 일치하는 문자 패턴 검색
  is null : null 값 찾음
+ escape '특수문자'
+ not 을 논리 연산자 앞에 씀: 부정문 (cf. is not null)
+ 우선순위: and > or 또는 괄호 안 연산 먼저
  */ 
+ 
+ --수업 코드
+ select first_name, department_id, salary, job_id
+ from employees
+ where   10000<=salary and salary<=12000;
+ select first_name, department_id, salary, job_id
+ from employees
+ where salary between 10000 and 12000;
+
+ select first_name, department_id, salary, job_id
+ from employees
+ where salary =10000 or salary =11000 or salary =12000;
+ select first_name, department_id, salary, job_id
+ from employees
+ where salary in (10000, 11000, 12000);
+ 
+ select first_name, department_id, salary, job_id
+ from employees
+ where first_name like '__t%';
+ select first_name, department_id, salary, job_id, commission_pct
+ from employees
+ where commission_pct is null;
+ select first_name, department_id, salary, job_id, commission_pct
+ from employees
+ where  escape '$';
