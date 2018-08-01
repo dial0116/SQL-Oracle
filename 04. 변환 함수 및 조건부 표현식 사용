@@ -1,0 +1,80 @@
+/* 04. 변환 함수 및 조건부 표현식 사용
+1) 데이터 유형 변환 
+-암시적: 오라클이 내부적으로 자동으로 변환  
+99% 문자->숫자 또는 날짜 eg. to_date(input값,'형식'), to_number(''), to_char 등
+1% 숫자->문자 or 날짜->문자 
+-명시적
+①to_char: select 절에서 format 바꿔 표현
+날짜format모델: 'yyyy/mm/dd hh24:mi:ss am(or pm)' 
+cf. 문자는 왼쪽정렬, 숫자는 오른쪽 정렬
+cf2. format' "표현하고싶은문자" '
+fm (format 앞에 씀): 0, 빈칸 등 채워지지 않은 곳에 쓰인 기호 없애줌
+숫자format모델: 9 왼쪽에 빈칸으로 채움, 0 왼쪽에 0으로 채움, $ 달러기호배치, L 로컬통화기호배치, , 천단위표시자, . 소수점출력
+where 절: 날짜 데이터 중에서 년월 또는 년월일 (시분초 자름) 등 일부 날짜 데이터만 추출하여 비교할시
+②to_date('문자', '지정형식') : 두 input을 매핑시켜 날짜 데이터로 바꿈
+cf. -, / 등 구분자 종류는 상관없이 같게 여김
+cf2. 시분초의 기본값은 00시 00분 00초 <-> ※sysdate나 판매일자에서는 데이터가 시분초 가짐
+
+2) 일반함수: null처리해주는 함수
+★NVL(n1,n2): input1이 null이면 input2로 반환
+cf. null과의 산술연산 결과는 null로 빠짐
+cf2. nullable 확인: null값이 들어올 수 있는지 여부 알림
+NVL2(n1,n2,n3): n1이 null이면 n3 아니면 n2 반환
+NULLIF(n1,n2): n1=n2이면 null 아니면 n1 반환
+COALESCE(n1,n2,n3...): 최초 null이 아닌 데이터를 반환
+*/
+
+--수업코드 4
+--암시적 변환 예
+select 10+'50'
+from dual;
+select *
+from employees
+where department_id like '1%';
+
+--명시적 변환 to_char 예) 날짜
+select sysdate, to_char(sysdate, 'yyyy/mm/dd'),to_char(sysdate, 'yyyy/mm/dd hh24:mi:ss'),to_char(sysdate, 'yyyy/mm/dd hh:mi:ss am')
+from dual;
+select sysdate, to_char(sysdate, 'MONTH/Month/month'),to_char(sysdate, 'MON Mon mon')
+from dual;
+select sysdate, to_char(sysdate, 'CC BC RM WW Q d')
+from dual;
+select sysdate, to_char(sysdate, 'dd ddsp ddspth')
+from dual;
+select hire_date, to_char(hire_date,'fmyyyy/mm/dd'), to_char(hire_date,'fmdd MONTH Day')
+from employees;
+--예) 숫자
+select salary*100, to_char(salary*100, '$999,999,999,999'),to_char(salary*100, 'l099,999,999,999'),to_char(salary*100, '000,000,000,000')
+from employees;
+-- to_date
+update employees set hire_date=sysdate
+where employee_id=203;
+commit;
+
+--오늘 날짜에 해당하는 데이터 구하는 법(시분초 생략)
+select first_name, employee_id, to_char(hire_date,'yyyy/mm/dd hh24:mi:ss')
+from employees
+--where hire_date>=to_date('2018/08/01','yyyy-mm-dd') and hire_date<to_date('2018/08/02','yyyy-mm-dd');
+where to_char(hire_date,'yyyymmdd')='20180801';
+
+select first_name, hire_date
+from employees
+where hire_date=to_date('JUNE 07 2002', 'MONTH dd yyyy');
+
+--null처리 함수 (col이 null값을 허용하는 경우 무조건 이렇게 씀)
+select salary,commission_pct, salary+commission_pct tot1,
+       nvl(salary,0)+nvl(commission_pct,0) tot2
+from employees;
+select nvl2(100,1,2), nvl2(null,1,2),nullif('a','b'),nullif(10,10),coalesce(10,20,30),coalesce(null,null,30),coalesce(null,null,null)
+from dual;
+
+--연습문제4
+select last_name || ' earns ' || salary ||' monthly but wants ' || salary*3 "Dream Salaries"
+from employees;
+select last_name, hire_date, next_day(add_months(hire_date,6),'MONDAY') review
+from employees;
+select last_name, replace(nvl(commission_pct, 100),100,'No Commission') comm
+from employees;
+select last_name, hire_date, to_char(hire_date,'DAY') day
+from employees
+order by to_char(hire_date,'d')-1;
