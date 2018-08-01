@@ -1,4 +1,4 @@
-/* 04. 변환 함수 및 조건부 표현식 사용
+/* 4. 변환 함수 및 조건부 표현식 사용
 1) 데이터 유형 변환 
 -암시적: 오라클이 내부적으로 자동으로 변환  
 99% 문자->숫자 또는 날짜 eg. to_date(input값,'형식'), to_number(''), to_char 등
@@ -77,4 +77,4 @@ select last_name, replace(nvl(commission_pct, 100),100,'No Commission') comm
 from employees;
 select last_name, hire_date, to_char(hire_date,'DAY') day
 from employees
-order by to_char(hire_date,'d')-1;
+order by to_char(hire_date-1,'d');
