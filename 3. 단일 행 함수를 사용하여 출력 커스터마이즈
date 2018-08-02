@@ -13,31 +13,31 @@
  lpad, rpad: 길이가 n2가 되도록 왼쪽/오른쪽부터 문자식으로 채움
  replace: n2를 n3으로 대체한 문자열 반환
  trim: 맨앞과 뒤의 문자 자름 <- '자를문자' from '기존문자'
- 2) 숫자함수
- from dual: 데이터가 없는 테이블 <-내가 원하는 계산 값 하나만 보여줌 
- round 반올림 함수(※소수점 아래: 그 자리까지 나타냄, 소수점 위: 그 자리에서 반올림), trunc 버림 함수, mod 나머지 반환 함수
- 3) 날짜함수
- 기본날짜표시 형식(영문OS의 경우): DD-MON-RR(일자-영문자 월 약자-년도2자리) 
- sysdate 함수: 현재 연월일 표시
- -날짜연산
- cf. "session: 접속창 eg. SQL Developer(gui환경), SQL plus(도수창)
- alter 접속창 set format='' : 접속창을 set 이하로 바꿔라
- hh24: 시(24시간), mi:분, ss:초"
- 날짜에 정수 더하고 빼기: 일자를 변환 -> 시간 변환: 1/24시간, 1/1440분 사용
- 날짜와 숫자 연산: +, - 가능
- 날짜와 날짜 연산: - (일수) 만 가능
- -날짜 함수
- months_between(최근일자, 오래전일자) : 두 날짜 간의 개월수
- add_months(날짜, 개월수): 날짜에 월 추가
- next_day(날짜,'FRIDAY'): 지정된 날짜 이후 다음 금요일인 날짜
- last_day(날짜) : 이 달의 가장 마지막 날짜
- cf. 다른 형태의 데이터 비교시: 오라클은 "문자 -> 숫자 or 날짜" 데이터로 99% 변환함 (예외. || 사용시 "숫자->날짜") 
- 날짜 데이터 비교시 기본 format 사용해야 함 + to_date 함수를 사용함
- round, trunc: 소수점 아래와 같음 즉, "자리까지 유지"
- 시에서 반올림시켜 일까지 표시(12시 정오 기준)
- 일자에서 반올림시켜 월까지 표시(15일 기준)
- 월에서 반올림시켜 년까지 표시(6개월 기준)
-  */
+2) 숫자함수
+from dual: 데이터가 없는 테이블 <-내가 원하는 계산 값 하나만 보여줌 
+round 반올림 함수(※소수점 아래: 그 자리까지 나타냄, 소수점 위: 그 자리에서 반올림), trunc 버림 함수, mod 나머지 반환 함수
+3) 날짜함수
+기본날짜표시 형식(영문OS의 경우): DD-MON-RR(일자-영문자 월 약자-년도2자리) 
+sysdate 함수: 현재 연월일 표시
+-날짜연산
+cf. "session: 접속창 eg. SQL Developer(gui환경), SQL plus(도수창)
+alter 접속창 set format='' : 접속창을 set 이하로 바꿔라
+hh24: 시(24시간), mi:분, ss:초"
+날짜에 정수 더하고 빼기: 일자를 변환 -> 시간 변환: 1/24시간, 1/1440분 사용
+날짜와 숫자 연산: +, - 가능
+날짜와 날짜 연산: - (일수) 만 가능
+-날짜 함수
+months_between(최근일자, 오래전일자) : 두 날짜 간의 개월수
+add_months(날짜, 개월수): 날짜에 월 추가
+next_day(날짜,'요일' eg.'FRIDAY'): 지정된 날짜 이후 다음 요일 eg.금요일 인 날짜
+last_day(날짜) : 이 달의 가장 마지막 날짜
+cf. 다른 형태의 데이터 비교시: 오라클은 "문자 -> 숫자 or 날짜" 데이터로 99% 변환함 (예외. || 사용시 "숫자->날짜") 
+날짜 데이터 비교시 기본 format 사용해야 함 + to_date 함수를 사용함
+round, trunc: 소수점 아래와 같음 즉, "자리까지 유지"
+시에서 반올림시켜 일까지 표시(12시 정오 기준)
+일자에서 반올림시켜 월까지 표시(15일 기준)
+월에서 반올림시켜 년까지 표시(6개월 기준)
+*/
 
 --03. 수업코드
 select last_name, first_name, upper(last_name), lower(last_name),initcap('ABC DEF')
@@ -47,11 +47,11 @@ select concat(last_name,first_name),
 --replace(concat(last_name,first_name), 'ate', '%')
 trim('D' from upper(concat(last_name,first_name)))
 from employees;
+
 select trunc(456.789),trunc(456.789,0),
 trunc(456.789,-1),trunc(456.789,-2),
 trunc(456.789,1),trunc(456.789,2)
 from dual;
-
 select 1600/500, mod(1600,500)
 from dual;
 
