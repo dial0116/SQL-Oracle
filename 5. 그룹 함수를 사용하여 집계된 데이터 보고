@@ -23,7 +23,6 @@ select first_name, salary
 from   employees
 where  department_id=20;
 
-
 select department_id, count(*), sum(salary)
 from   employees
 group by department_id
