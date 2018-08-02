@@ -1,0 +1,118 @@
+/* 5. 그룹 함수를 사용하여 집계된 데이터 보고
+1)그룹함수 : 그룹별로 하나의 결과 반환, input값은 딱 하나만 가능, 올 수 있는 위치에 제한이 있음
+cf.단일행함수는 column이 지정되는 위치 어디든 사용가능, null값은 무시함=읽지않고 넘어감
+count, min, max: 데이터 타입에 상관없이 씀 <-> 나머지는 숫자형태의 데이터에만 씀
+count(*), count(distinct col)
+avg=sum/count
+avg(col)<->avg(nvl(col,0)) : null 값은 count 되지 않기에
+2) GROUP BY 절: 소그룹 별로 그룹핑하여 한번씩만 출력
+select 절에 일반 column과 그룹핑 함수 함께 쓰일 수 없음 즉, 건건이 나타낼 수 없음<- b/c 그룹핑함수는 그룹하여 하나의 결과만 반환하므로
+->★So select 절에 쓰인 일반 column들은 항상 group by절에 모두 써줌 <-> 거꾸로는 아님: select 절에 그룹함수만 쓰고 group by절에 일반 column 쓸 수 있음
+대부분 select절에 그룹핑한 열 거의 써줌(그룹기준 보여주기 위해)
+group by 는 order by 를 거의 필수처럼 같이 씀
+3) SQL 함수 쓰는 순서 <-> 읽기 순서: from 테이블-> where 조건-> group by 
+->So where절에 group함수 쓸 수 없음 -> sol) having 그룹함수 비교연산자 값
+having 절: where 절과 똑같음 (eg. select절에 없는 그룹함수도 쓸 수 있음)
+order by 절: (group by 쓴 경우) select 절에 쓰인 순수 col들만 쓸 수 있음 (그룹함수는 모두 사용 가능)
+4) 그룹함수 중첩
+max,min(avg,count())
+*/
+
+--수업코드 5
+select first_name, salary
+from   employees
+where  department_id=20;
+
+
+select department_id, count(*), sum(salary)
+from   employees
+group by department_id
+order by job_id;
+
+--수업코드 5
+select count(salary),sum(salary),avg(salary),min(salary),max(salary)
+from employees
+where department_id=50;
+--where 조건으로 그룹핑
+select count(*), count(commission_pct), count(job_id), count(distinct job_id)
+from employees;
+select count(commission_pct),sum(commission_pct),avg(commission_pct),avg(nvl(commission_pct,0))
+from employees;
+select count(1),count('a'),count(0),count(100),count(null)
+from dual;
+select department_id, job_id, count(*), avg(salary)
+from employees
+group by department_id, job_id
+order by department_id, job_id;
+select count(*), avg(salary)
+from employees
+group by department_id
+having count(*)>=5
+order by department_id;
+select min(avg(salary))
+from employees
+group by department_id;
+--소그룹 별로 계산된 평균 중에 최소값
+
+select distinct department_id, job_id
+from employees
+order by 1,2;
+--두 열을 결합한 값의 유일한 값들을 출력 
+select department_id, job_id
+from employees
+group by department_id, job_id
+order by 1,2;
+
+select first_name, salary
+from employees
+order by department_id;
+select department_id, count(*)
+from employees
+group by department_id
+order by 1;
+
+--연습문제 5
+select job_id, min(salary), max(salary),sum(salary),avg(salary),count(*)
+from employees
+group by job_id
+order by job_id;
+
+select manager_id, min(salary)
+from employees
+where manager_id is not null
+group by manager_id
+having min(salary)>6000
+order by min(salary) desc;
+
+select count(*)
+from employees
+where last_name like '%n';
+select count(*)
+from employees
+where substr(last_name,-1,1)='n';
+
+select 'total', count(*)
+from   employees
+union all
+select substr(hire_date,-2,2),count(substr(hire_date,-2,2))
+from employees
+group by substr(hire_date,-2,2)
+having substr(hire_date,-2,2) in (02,03,04,05); 
+
+--★리포트 뽑을 때 유용: 데이터의 건수를 세는 방법: count 또는 sum 함수 
+select count(*),count(decode(to_char(hire_date,'yyyy'),'2002','abc',null)) "2002", 
+count(decode(to_char(hire_date,'yyyy'),'2003','abc',null)) "2003",
+count(decode(to_char(hire_date,'yyyy'),'2004','abc',null)) "2004",
+count(decode(to_char(hire_date,'yyyy'),'2005','abc',null)) "2005"
+--sum(decode(to_char(hire_date,'yyyy'),'2002', 1, 0))
+from employees;
+--숫자를 alias로 쓰려면 ""에 넣어줘야 함
+
+select job_id, sum(decode(department_id, 20, salary, 0)) "Dept20", 
+sum(decode(department_id, 50, salary, 0)) "Dept50",
+sum(decode(department_id, 80, salary, 0)) "Dept80",
+sum(decode(department_id, 90, salary, 0)) "Dept90",
+sum(salary) total
+from employees
+group by job_id
+order by job_id;
