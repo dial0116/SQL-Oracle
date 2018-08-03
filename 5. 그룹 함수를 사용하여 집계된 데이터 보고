@@ -115,3 +115,11 @@ sum(salary) total
 from employees
 group by job_id
 order by job_id;
+--select절에 일반 열과 그룹 함수 함께 쓰이면 group by에 일반 열 써줘야 함
+--행, 열 전환
+select department_id, sum(salary),
+    sum(decode(job_id, 'AC_ACCOUNT', salary, 0)) "AC_ACCOUNT",
+    sum(decode(job_id, 'SA_MAN', salary, 0)) "SA_MAN"
+from employees
+group by department_id
+order by 1;
