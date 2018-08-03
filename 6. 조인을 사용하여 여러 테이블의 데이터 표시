@@ -1,0 +1,133 @@
+/* 6. 조인을 사용하여 여러 테이블의 데이터 표시 
+Intro)
+하나의 엑셀 형태의 표에 데이터 모두 넣음 -> 데이터 이상현상 발생 가능 -> 데이터 여러 표에 분리 : 데이터 정규화 = '데이터의 분리 작업' -> 조인 필요
+하나의 엑셀 형태의 표에 데이터 모두 넣을시 문제점
+부서에 대한 마스터 정보를 갖고 있는 부서 표가 필요함 eg. 퇴사시 사라지는 데이터가 필요시됨 : 데이터 이상현상 
+변경작업을 최소화
+cf. 관계형 데이터 베이스: 검색을 빠르게 하기 위한 목적이 아니라 들어오는 데이터가 결점이 없도록 하기 위함
+<->은행: 네트워크 DB - 데이터가 중복되는 현상이 많이 나타남
+key 값: 사원들을 유니크하게 구분하는 데이터 eg.사원번호(주민등록번호 보다는)
+3 정규화: 데이터 분리 작업, key값에 다른 데이터들이 종속됨, key가 아닌 열에 종속되는 데이터는 별도의 엑셀표로 분리됨
+
+<Inner join> : 테이블간 무조건 일치하는 데이터만 보여줌
+1) JOIN: 여러 테이블에서 데이터 가져오기
+①오라클의 전통적인 방법
+비조인 조건절 먼저 확인 (일의 양을 줄이기 위해)
+★조인 조건절: where table.col 비교연산자 table.col and/or... <- 조건이 없으면 모든 데이터 매칭시켜 전체 결과를 반환
+정리) select절: 열에 테이블 지정, from절: 사용하는 여러 테이블 나열, where절: 열 비교절 사용
+
+②SQL문장에 대한 ANSI에서 지정해준 표준 (3가지 방법) *수업코드 참고
+명확히 하기 위해 유니크한 칼럼도 접두어 붙이는 걸 권장,
+테이블의 alias 사용하는 걸 메모리 절약을 위해 권장
+->열의 alias는 order by 절에만 사용 가능, 테이블의 alias는 강력하여 테이블의 이름이 접두어로 들어간 모든 자리에 alias를 사용해야 함
+
+2) Self Join : 하나의 테이블 사용
+순환 구조 가지는 테이블: eg. 계층 구조의 테이블(상위부서의 상위부서) -> 기존 테이블을 또한번 읽어서 데이터 가져옴
+
+3) Nonequijoin : 범위로 비교
+where t1.col between t2.col and t2.col 다른 테이블의 범위에 속하는지 비교
+
+<Outer join> : 테이블간 일치하지 않는 데이터도 봄 <- 실무에 희박하게 ( 1% 정도만 해당 ) 쓰임
+※ 다른 조인은 오라클조인을 쓰고 outerjoin은 ANSI표준을 쓰자
+1) Ansi 표준
+left/right outer join : 왼쪽/오른쪽 테이블의 데이터 모두 보여줌
+full outer join: 양쪽 테이블의 일치하는 데이터 + 일치하지 않는 데이터 모두 보여줌
+
+<Cartesian Product> : join 조건을 안쓴 경우 두 테이블의 데이터 모두 매칭함 -> n * m 개의 데이터 반환
+※ 일반적인 업무에 대해서 절대 발생하면 안되는 결과
+= <cross join> : Ansi 표준으로 join의 조건 없이 씀
+*/
+
+--수업코드
+--(1) Inner join 중 2개 테이블 조인
+select * from emp;
+select * from dept;
+insert into emp
+values(500,'MIKE',2000,null);
+commit; --저장버튼
+
+--오라클의 전통적인 방법 <-가장 많이 씀★
+
+--alter table emp rename column empano to empno;
+select empno, ename, d.deptno, e.deptno, dname
+from emp e, dept d
+where  e.deptno = d.deptno --조인 절 : 열의 이름이 다른 경우도 사용 가능 cf. null 값 있는 행 결과 반환 안함
+and e.sal >= 3000;
+--ANSI 표준 방법
+--1) join, on : 두번째로 많이 씀 (오라클의 전통적인 방법과 가장 유사)
+select empno, ename, emp.deptno, dept.deptno, dname --테이블을 접두어로 붙임
+from emp join dept -- ',' 대신 조인 키워드 씀
+on  emp.deptno = dept.deptno --조인의 조건절은 on 에 반드시 씀 , 추가적인 조건(비조인 조건절 등)은 and 로 붙여쓸 수 있음
+where emp.sal >= 3000; --비조인 조건절은 where 에 씀
+--and emp.sal >= 3000; 
+--2) join, using
+select empno, emp.ename, deptno, deptno, dept.dname --조인에 참여하는 열에 테이블을 접두어로 쓰지 않음(즉, 이름만 기술) // 조인에 참여하지 않는 칼럼에는 접두어 붙일 수 있음
+from emp join dept
+using (deptno) ;  --조인에 참여되는 열의 이름만 씀, 테이블을 접두어로 쓸 수 없음 -> so ※ 양쪽 테이블에 열이름이 같아야 사용 가능 , 데이터 타입은 달라도 됨
+--3) natural join
+select empno, emp.ename, deptno, deptno, dept.dname --조인에 참여하는 열에 테이블을 접두어로 쓰지 않음(즉, 이름만 기술)
+from emp natural join dept; --원래 공통된 열이 두개 이상일 경우 여러가지 방법을 사용 가능-> but 'natural join' 은 양쪽 테이블에 열이름과 데이터 타입이 똑같은 모든 열에 대해 '=' 로 조인함
+
+--(2) 3개 이상 테이블 조인
+select * from departments;
+select * from locations;
+--오라클 전통
+select employee_id, first_name, department_name, city
+from employees e, departments d, locations l --★테이블이 3개이면 조인 조건절이 2개 이상 필요함
+where e.department_id=d.department_id and d.location_id=l.location_id;
+
+--(3)
+create table salgrade
+( losal number,
+  hisal number,
+  grade varchar2(30) );
+insert into salgrade values(0,5000,'low');
+insert into salgrade values(5001,10000,'low-med');
+insert into salgrade values(10001,15000,'med');
+insert into salgrade values(15001,20000,'med-high');
+insert into salgrade values(20001,99999,'high');
+commit;
+select * from salgrade;
+
+--self join
+select w.employee_id, w.first_name, w.manager_id, m.first_name
+from employees w, employees m
+where w.manager_id = m.employee_id;
+--eg. employee_id = manager_id: 같은 데이터가 들어가 있음
+
+--(4) nonequijoin
+select empno, ename, sal, grade
+from emp e, salgrade s
+where e.sal between s.losal and s.hisal; --공통된 열이 없으면 테이블 이름 안붙여도 됨
+
+--Outer join(ANSI 표준만 알면됨)
+select empno, ename, e.deptno, d.deptno, dname
+from emp e left outer join dept d -- 왼쪽 테이블 정보 다 보여줌
+on  e.deptno = d.deptno ;
+select empno, ename, e.deptno, d.deptno, dname
+from emp e right outer join dept d -- 오른쪽 테이블 정보 다 보여줌
+on  e.deptno = d.deptno ;
+select empno, ename, e.deptno, d.deptno, dname
+from emp e full outer join dept d -- 양쪽 테이블의 일치하지 않는 정보 다 보여줌
+on  e.deptno = d.deptno ;
+
+--Cartesian product = Cross join (join절 안쓴 경우)
+select empno, ename, e.deptno, d.deptno, dname
+from emp e, dept d;
+
+--연습문제 6
+select location_id, street_address, city, state_province, country_name
+from locations l, countries c
+where l.country_id=c.country_id ;
+
+select d.department_id, d.department_name, d.location_id, count(e.employee_id) --count(*)
+from departments d left outer join employees e
+on d.department_id = e.department_id
+group by d.department_id, d.department_name, d.location_id
+order by 1,2,3;
+
+select d.department_id, d.department_name, count(e.employee_id)
+from departments d, employees e
+where d.department_id=e.department_id 
+group by d.department_id, d.department_name
+having count(e.employee_id)<3;
