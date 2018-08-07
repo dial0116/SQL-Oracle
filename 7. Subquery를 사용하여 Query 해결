@@ -45,16 +45,6 @@ eg. select * from employees where exists (select from 판매테이블 where empl
 
 cf. 어려운 쿼리의 경우 두개의 sql 문장으로 분리시켰다가 결합시키기
 
-<집합연산자>
-union(합집합) <-> union all(교집합 중복된 채로 그대로 반환), intersect, minus
--★select 에서 선택하는 칼럼의 개수와 앞뒤 select에서 사용한 데이터 유형은 같아야 함
--위에서 아래로 순서대로 연산함, 우선순위 변경은 괄호로 함
--order by 명령어는 맨 마지막 select 절에만 올 수 있음
--최종 반환되는 칼럼의 머리글과 order by 에 쓰이는 칼럼은 첫번째 select절의 칼럼만 
--대부분 
-union all: 순차적으로 display <-> 이를 제외한 연산자들은 select 절에 쓰여진 모든 칼럼에 대해 정렬작업 후 중복제거. 따라서 자동적으로 정렬됨
-*/
-
 --수업코드 7
 select first_name, salary, (select avg(salary) from employees) --한 개의 데이터 값만 반환 가능 
 avg_sal
@@ -110,27 +100,6 @@ where department_id not in (select distinct department_id from employees where d
 ---> null 값이 없어야 함 ->so 'not in' 쓸 경우 'is not null' 써줌
 select * from employees where commission_pct=null; --에러가 아닌 'no row found'
 
-select department_id, first_name, last_name, salary
-from employees
-where department_id=110
-union 
-select employee_id, first_name, last_name, commission_pct
-from employees
-where salary>=15000
-order by salary; --department_id 칼럼에 department_id와 employee_id 모두 표현함
-
-select employee_id, job_id
-from job_history
-minus
-select employee_id, job_id 
-from employees;
-
-select location_id, department_name, null --'0'과 같은 명시적 값 삽입
-from departments
-union
-select location_id, null, city
-from locations;
-
 --연습문제 7
 select employee_id, first_name, salary
 from employees
@@ -164,15 +133,3 @@ select first_name, hire_date --치환변수 활용
 from employees
 where department_id in (select department_id from employees where first_name='&b') and first_name<>'&&b'; 
 undefine first_name
-
-select distinct job_id, department_id --결합 칼럼에 대해 중복된 값 제거
-from employees
-where department_id = 10
-union all
-select distinct job_id, department_id
-from employees
-where department_id = 50
-union all 
-select distinct job_id, department_id
-from employees
-where department_id = 30;
