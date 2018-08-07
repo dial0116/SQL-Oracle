@@ -132,4 +132,4 @@ where rownum=1;
 select first_name, hire_date --치환변수 활용
 from employees
 where department_id in (select department_id from employees where first_name='&b') and first_name<>'&&b'; 
-undefine first_name
+--undefine b : clear하고 다시 물어봄
