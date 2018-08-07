@@ -4,13 +4,16 @@
 Query 명령문: SELECT
 select(메인 쿼리 명령문) col, (select)(서브 쿼리 명령문)
 ★②from (select) : 가공된 테이블 만듦 -> 결과 반환 후 사라짐
-★①where col 비교연산자 (select) : 
-group by
-having 그룹함수 비교연산자 select
-order by select ;
+eg. 부서별 평균급여 상위 top3 구하기: 부서별 avg(salary)가 정렬된 데이터가 필요-> 어디에도 저장되어 있지 않음-> from에 select절 사용
+★①where col 비교연산자 (select) 
+group by ※select 절 못옴
+having 그룹함수 비교연산자 (select)
+order by (select) ;
+eg. 먼저 서브쿼리에서 사원들의 salary avg를 구해야함
 
 서브쿼리는 
-메인쿼리 전에 실행되어 메인쿼리에 사용됨
+-메인쿼리 전에 먼저 실행되어 메인쿼리에 사용됨
+-서브쿼리 결과가 몇개인지 모를 때 in 연산자 사용
 반드시 괄호로 묶음
 단일행/여러행 연산자에 따라 단일행/여러행 서브쿼리 사용 cf. in 제외하고는 단일행 연산자(=,>..)
 단일행 연산자: 한 행이 한 칼럼으로 이루어짐
@@ -21,7 +24,7 @@ any (or), all (and) : 단일행 연산자와 함께 쓰임
 =any, >any : in
 =all, <all 
 
-비상관 서브쿼리: 서브쿼리가 먼저 실행
+비상관 서브쿼리: 거의 대부분의 서브쿼리에 해당, 서브쿼리가 먼저 실행
 상관 서브쿼리: 서브쿼리가 독자적으로 실행이 안되고 바깥쿼리가 먼저 실행되어 바깥테이블이 서브쿼리에 영향 주는 경우
 -첫번째 행 읽고 서브쿼리에 존재하면 자신이 지정한 데이터 반환 실행
 
@@ -33,11 +36,12 @@ Rowid: 색인, 행의 위치 주소값
 dml 작업 시 중복되는 데이터 삭제 작업시 rowid 활용
 Rownum: 책에서 데이터(행)를 읽는 순서값
 
-EXISTS 연산자 : 항상 상관임, 서브쿼리 안 데이터 존재 체크 
+EXISTS 연산자 : 항상 상관임, 왼쪽에 열 안씀, 바깥쪽 테이블의 데이터가 서브쿼리 안에 존재하는지 여부 체크 
 exists = in, not exists = not in 
 예) select *
 from 학생테이블
 where exists (select 1|'a'|colname from 도서대출테이블 where 도서대출.학번=학생.학번)
+eg. select * from employees where exists (select from 판매테이블 where employee_id=고객번호) : 회사의 온라인 쇼핑몰을 통해서 한번이라고 구매한적 있는지 여부 체크
 
 cf. 어려운 쿼리의 경우 두개의 sql 문장으로 분리시켰다가 결합시키기
 
