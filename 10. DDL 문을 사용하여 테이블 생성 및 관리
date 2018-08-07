@@ -30,7 +30,8 @@ foreign key: 정규화로 인해 나타난 제약조건, 다른 테이블의 pri
 check: column in ('A','B',...) 칼럼에 특정값 이외의 값 들어올 수 없게 만듦
 -테이블이 생성되는 시점이나 생성 후 선언
 -제약조건 이름 생성안되면 자동 
-
+(6) 테이블 휴지통 안거치고 삭제
+drop table 테이블이름 purge; 
 */
 --수업코드 10
 create table emp_sample
@@ -53,6 +54,11 @@ create table dept_test
 (deptno number constraint deptno_pk primary key, --constraint 제약조건이름 제약조건타입
  dname varchar2(30) not null, --제약조건타입만
  loc varchar2(30)) ;
+  create table student
+ ( student_id number, student_name varchar2(20), grade varchar2(2), 
+ dept_id number constraint dept_id_fk references dept_test(deptno), --column level에서는 foreign key 안써주고 바로 references 씀
+ constraint student_pk primary key(student_id), constraint grade_ch check(grade in ('A','B','C'))); 
+ 
  --table level에서의 제약조건 (not null제외)
  create table emp_test
  (empno number, lname varchar2(25) not null, fname varchar2(25) not null, salary number, deptno number,
