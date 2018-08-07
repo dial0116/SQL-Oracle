@@ -46,10 +46,20 @@ select distinct job_id, department_id
 from employees
 where department_id = 30;
 
+select * from countries;
 select * from locations;
 select country_id, country_name
 from countries
 minus
-select country_id, null
-from locations l
-where l.location_id in (select d.location_id from departments d, employees e where d.department_id=e.department_id);
+select c.country_id, country_name
+from locations l, countries c
+where l.country_id=c.country_id  --★조인의 조건절
+and l.location_id in (select d.location_id from departments d, employees e where d.department_id=e.department_id);
+
+select * from locations;
+select country_id, country_name
+from countries
+minus
+select l.country_id, c.country_name
+from countries c, locations l, departments d, employees e --조인을 활용
+where c.country_id=l.country_id and l.location_id=d.location_id and d.department_id=e.department_id;
