@@ -1,0 +1,71 @@
+/* 10. DDL 문을 사용하여 테이블 생성 및 관리
+data definition language : 데이터 담는 그릇 만드는 언어
+1) 데이터베이스 객체: create를 통해 만들어지는 모든것 (테이블: 데이터를 저장하는 객체, user: 데이터 저장하지 않는 객체)
+테이블: 엑셀 형태의 표, 실제 데이터 저장함
+색인: 테이블에서 빠르게 검색하기 위한 객체
+뷰: 데이터의 부분집합
+시퀀스: 값을 순차적으로 반환하는 객체
+동의어: 객체에 다른 이름을 부여
+
+2)엑셀 형태의 표 그리기
+(1)(테이블이나 열)이름 지정 규칙
+-문자로 시작, 길이 1-30자, '영어,_,$,#' 만 사용 가능(한글x), 중복불가
+-'한글' 같이 허용안되는 이름을 테이블이나 칼럼 이름으로 쓰고 싶을 때 "" 안에 써줌 -> 나중에 불러올때도 "" 꼭 써줌
+(2) 테이블 생성
+create table 테이블이름 (colname datatype(길이값), ...)
+(3) 데이터 유형(칼럼 내)
+varchar2(size): 가변길이 문자데이터, char(size): 고정길이 문자데이터(나머지공간을 공백으로 채움), number(소수점위 자릿수(소수점아래 포함), 소수점아래 자릿수): 가변길이 숫자데이터,
+date:고정길이 날짜데이터, clob: 큰 문자 데이터, blob: 큰 바이너리 데이터, rowid: 행의 위치 주소값
+(4) datetime 날짜 데이터 유형: 
+date: 시분초까지 저장함
+timestamp: 시분초 단위 아래까지 보여줌 
+(5) 제약 조건 개요: column 속성 지정
+not null
+unique: null값을 허용, 한개의 테이블 당 여러개 사용가능
+primary key: null값 불허용, 한개의 테이블 당 하나만 사용가능, key값으로 사용가능(not null+unique들이 후보)
+테이블의 모든 데이터의 값은 primary key에 의존함
+->아닌 값들은 분리시켜 새로운 primary key 생김->
+(아래는 우리나라는 DB에서 잘안씀)
+foreign key: 정규화로 인해 나타난 제약조건, 다른 테이블의 primary키를 참조(reference)해 오는 column
+check: column in ('A','B',...) 칼럼에 특정값 이외의 값 들어올 수 없게 만듦
+-테이블이 생성되는 시점이나 생성 후 선언
+-제약조건 이름 생성안되면 자동 
+
+*/
+--수업코드 10
+create table emp_sample
+( emp_id number, lname char(30), fname varchar2(30), hiredate date, dept_id number); --ddl작업
+insert into emp_sample
+select employee_id, last_name, first_name, null, department_id
+from employees
+where department_id<=30; --dml작업
+select * from emp_sample;
+commit;
+select lname||fname, fname||lname
+from emp_sample;
+select * from emp_sample where lname='Fay';
+
+select sysdate, systimestamp
+from dual;
+
+--column level에서의 제약조건 
+create table dept_test 
+(deptno number constraint deptno_pk primary key, --constraint 제약조건이름 제약조건타입
+ dname varchar2(30) not null, --제약조건타입만
+ loc varchar2(30)) ;
+ --table level에서의 제약조건 (not null제외)
+ create table emp_test
+ (empno number, lname varchar2(25) not null, fname varchar2(25) not null, salary number, deptno number,
+ constraint empno_pk primary key(empno), constraint salary_ch check(salary>5000), constraint deptno_fk foreign key(deptno)
+ references dept_test(deptno));
+ 
+ insert into emp_test
+ select employee_id, last_name, first_name, salary, department_id
+ from employees
+ where salary>10000;
+ 
+ insert into dept_test(deptno, dname)
+ select department_id, department_name from departments;
+ commit;
+ 
+ select * from emp_test;
