@@ -1,0 +1,117 @@
+/* 9. 데이터 조작
+:데이터를 변경하는 작업 <-명렁어는 쉽지만 
+
+DML(데이터 조작어)
+테이블에 새 행 추가, 기존 행 수정, 기존 행 제거 
+트랜잭션: DML 명령어들의 집합 (데이터 수정 시작부터 저장 또는 종료까지의 모든 수행작업) ->commit시 저장 단위, rollback시 back 단위
+cf. 1.parse: compile, 2.execute: 실행 /(DML,DDL은 여기서 끝남->So 스크립트만 출력), 3.fetch: GUI 환경으로 display (select만 해당) 
+문서 수정 상에서는 변경작업 보임, but command 창(SQL PLUS 창)에서는 저장하기 전에는 안보임 b/c 아직 확정되지 않은 불안정한 데이터이므로.
+sql plus 창: 마지막으로 실행시킨 문장을 다시 한번 실행시키는 키워드 '/'
+cf. DDL: 데이터가 담길 그릇 만들기 eg. create, alter, drop, truncate
+
+1)insert : 테이블에 데이터 삽입
+(1)Insert into 테이블 ()
+values()
+: 한행을 넣고 싶을 때의 명령어, 데이터를 한건씩 넣고 싶을 때, 칼럼의 개수만큼 values 지정(순서대로, 데이터타입에 맞게)
+-칼럼이 날짜 형태의 데이터일 경우 to_date() 사용하여 데이터 넣음
+-null 값 삽입: 칼럼의 이름 지정하여 해당 칼럼에만 값 넣거나 칼럼 안쓸 경우 null을 써줌
+-특수값 삽입: sysdate(시분초까지 삽입), to_date(입사일자와 같이 시분초 제거하고 입력할 경우, 즉 00시 00분 00초) 
+cf. []:생략하고 써도 된다는 의미
+-치환변수 사용하여 insert: command 창에서 유용 
+
+(2) insert into 테이블()
+select 
+from
+where
+: 기존 테이블의 일부를 신규 테이블에 삽입, 여러건의 데이터 삽입
+
+2) Update : 테이블의 데이터 변경(수정)
+Update 테이블
+Set col=변경값 [, col=값] <-값 자리에 select 명령어 들어올 수 있음
+[where 조건] <-조건 없으면 특정 col의 전체 행을 값으로 변경
+-set col=null : null 값 지정
+-조건 절의 비교연산자 옆 값에 서브쿼리 지정 가능
+★값자리에 select절 사용 가능
+
+3) 테이블에서 행 제거
+(1) delete [from] table : 테이블 전체 데이터 삭제
+[where 조건]
+-특징: 조건 걸 수 있음, 변경 전 데이터 저장(rollback 사용가능)
+(2) truncate table 테이블이름
+-특징: 조건 못검, 과거 데이터 저장하지 않음
+
+4)commit: 저장, rollback: 마지막 저장으로 한꺼번에 되돌림(전체 단위로 back)
+savepoint -> rollback to savepoint 변수이름: 사진 찍어놓기
+
+다른 유저는 commit되지 않은 데이터 보지 못함(eg. command 창 <-> SQL developer 창)
+
+*/
+
+--수업코드 9
+alter table dept add (create_dt date);
+
+select * from emp;
+select * from dept;
+
+insert into dept
+values(60, 'Education', sysdate) ;--to_date(원하는 패턴 아무렇게나 지정, 매칭되는 format) :데이터 타입 변환 단일행 함수
+
+insert into emp(ename, sal, empno)
+values('John', 2800, 502);
+
+insert into emp
+values(501, 'Smith', 5000, 50);
+commit; --저장버튼
+rollback; --변경한 데이터 되돌림
+
+--사원 테이블의 일부 데이터를 읽어 emp테이블에 넣는 작업
+insert into emp
+select employee_id, first_name, salary, department_id
+from employees
+where employee_id<=110;
+
+update emp
+set deptno=70
+where deptno is null;
+
+--104번 사원과 동일한 급여를 받는 사원들의 부서번호를 110으로 변경(104번 사원의 부서번호는 변경안함)
+update emp
+set deptno=110
+where sal = (select sal from emp where empno=104)
+and empno!=104;
+
+--사번이 110인 사원이 받는 급여로 사번이 119인 사원의 급여를 변경
+update emp
+set sal=(select sal from emp where empno=110)
+where empno=119;
+
+--테이블 전체 삭제
+delete dept
+where deptno=10;
+--급여가 8200인 사람과 동일한 부서에서 근무하는 사람 삭제
+delete emp
+where deptno in (select deptno from emp where sal=8200);
+
+truncate table dept;
+select * from dept;
+rollback; --소용없음
+
+insert into dept
+select department_id, department_name, sysdate
+from departments
+where department_id<=150;
+savepoint insl;
+update dept set create_dt=to_date('2018/01/01','yyyy/mm/dd') where deptno>=100;
+savepoint upd;
+delete dept
+where deptno<=50;
+rollback to savepoint upd;
+
+--연습문제 9
+select * from emp;
+alter table emp add (dname varchar2(50)); --보통 하나의 테이블에 많은 데이터 가지거나 조인비교시 속도 떨어짐->자주 사용되는 열은 '역정교화'함
+--cf. 정교화: 원칙적으로 데이터를 분리시킴(키값과 종속값 으로 이루어진 테이블로)
+
+--★상관 update (가장 어려움!): select 절의 상관 서브쿼리 이용하여 하나의 update절 쓰기 
+update emp
+set dname=(select dname from dept where emp.deptno=dept.deptno); --메인쿼리 한행 먼저 읽고 한행에 해당하는 일부데이터를 상관서브쿼리의 where 조건 값으로 가져옴
