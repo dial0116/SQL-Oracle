@@ -1,0 +1,131 @@
+/* 11. 기타 스키마 객체 생성
+1) 뷰 개요
+반복사용되는 select 절: inline view
+뷰: 실제 데이터를 가진 객체가 아닌 "select 명령문을 가진 객체", 가공된 데이터를 보여주는 select문을 반복적으로 사용 가능하게 함
+장점) sql문장 간단히 만듦, 테이블의 이름을 외부로부터 숨김
+단순뷰: 테이블 한개, 단일행이나 그룹행 함수 포함 안함, dml작업가능(eg. 단순 뷰 속 테이블에 insert 함 so 테이블의 제약조건에 맞아야 함)
+복합뷰: 한개 이상 테이블, 단일행이나 그룹행 함수 포함 ->즉 조인 ,dml작업불가 
+->그냥 뷰는 dml작업 안된다고 생각! (with read only : dml 작업 거부하고 select 작업만 허용)
+
+<뷰 생성법>
+create [or replace] [force|no force] view 뷰이름 <-같은 이름의 뷰를 대치하여 작업, table 없어도 뷰 생성
+(뷰의 colname)
+as select colname
+from 
+where
+desecribe 뷰이름
+
+<뷰 제거>
+drop view 뷰이름
+
+2) 시퀀스 개요
+데이터 insert시 
+create sequence 시퀀스이름
+[start with 시작값] --최초
+[increment by 증가값]
+[minvalue 최소값|nominvalue] --cycle 돈 후 시작값
+[maxvalue 최대값|nomaxvalue]
+[cycle|nocycle] --nocycle이면 에러
+[cache n|nocache]--nextval 할때 미리 만들어진 memory 사용하여 빨리 결과 반환
+
+-시퀀스 object는 값이 쓰이는 곳에 쓸 수 있음
+select 시퀀스이름.nextval from dual; --최초의 값이 1 또는 지정된 값, 순차적으로 지정된 값 보여줌(1씩 또는 지정된 값만큼 증가)
+select 시퀀스이름.currval from dual; --마지막으로 return 한 값 확인
+-insert 또는 select시 시퀀스를 많이 사용
+
+<시퀀스 수정>
+alter sequence 시퀀스이름
+increment by... <-start with 제외하고 모두 변경가능
+
+3) index 인덱스 개요
+
+*/
+--수업 코드 11
+--1) 뷰
+select department_id, job_id, avg_sal
+from (select department_id, job_id, avg(salary) avg_sal --서브쿼리가 반복적으로 사용될 경우
+from employees
+group by department_id, job_id
+order by 3 desc)
+where rownum<=3;
+
+select *
+from (select employee_id, first_name, salary --rownum은 데이터가 저장된 테이블의 행번호임
+from employees
+order by salary desc) --임시 저장 형태의 엑셀 데이터 표
+where rownum<=10;
+
+create view sal_top_v
+as
+select employee_id, first_name, salary 
+from employees
+order by salary desc;
+
+select *
+from sal_top_v
+where rownum<=10;
+
+create view avg_sal_top
+as
+select department_id, job_id, avg(salary) avg_sal --칼럼의 이름으로 읽히기 위해 칼럼이름 지정
+from employees
+group by department_id, job_id
+order by 3 desc;
+select department_id, job_id,avg_sal
+from avg_sal_top
+where rownum<=3;
+
+CREATE OR REPLACE VIEW empvu20
+AS SELECT *
+FROM employees
+WHERE department_id = 20
+WITH CHECK OPTION CONSTRAINT empvu20_ck ; --not null, primary key 모두 가진 단순뷰로 dml 작업으로 뷰에 insert 하는 것 가능 // ddl작업을 허용하지 않겠다고 명령함
+--조건에 맞는 특정데이터만 삽입 가능, 특정데이터 변경 불가 (eg. where 조건에 해당하는 데이터)
+select * from empvu20;
+update empvu20 set department_id=50; 
+
+--2) 시퀀스
+select * from dept_test;
+create sequence seq1;
+create sequence seq2
+start with 10
+increment by 5
+maxvalue 200
+cycle; --
+create sequence dept_seq
+start with 400
+increment by 10;
+
+select seq1.nextval from dual; --최초의 값이 1 또는 지정된 값, 순차적으로 지정된 값 보여줌(1씩 또는 지정된 값만큼 증가)
+select seq1.currval from dual; --마지막으로 return 한 값 확인
+select seq2.nextval from dual;
+insert into dept_test
+values(dept_seq.nextval, 'BBB', null); --빈공간에 저장
+
+select * from member;
+select * from reservation;
+
+--연습문제 11
+create sequence member_id_seq
+start with 101 increment by 1 ;
+create sequence title_id_seq
+start with 92 ;
+insert into member
+--values(member_id_seq.nextval, 'Carmen','Velasquez','283 King Street', 'Seattle','206-899-6666', to_date('08-MAR-1990','DD-MON-YYYY'));
+--values(member_id_seq.nextval, 'LaDoris','Ngao','5 Modrany', 'Bratislava','586-355-8882', to_date('08-MAR-1990','DD-MON-YYYY'));
+values(member_id_seq.nextval, 'Molly','Urguhart','3035 Laurier', 'Quebec','418-542-9988', to_date('18-JAN-1991','DD-MON-YYYY'));
+insert into title
+--values(title_id_seq.nextval, 'My Day Off', 'A', 'PG','COMEDY', to_date('12-JUL-1995','DD-MON-YYYY'));
+--values(title_id_seq.nextval, 'Miracles on Ice', 'B','PG','DRAMA', to_date('12-SEP-1995','DD-MON-YYYY'));
+values(title_id_seq.nextval, 'Soda Gang', 'C','NR','ACTION', to_date('01-JUN-1995','DD-MON-YYYY')); --오류나도 시퀀스는 실행됨
+select *from title;
+
+insert into reservation
+--values(sysdate, (select member_id from member where last_name='Carmen'), (select title_id from title where title='Miracles on Ice') );
+values(sysdate, (select member_id from member where last_name='Molly'), (select title_id from title where title='Soda Gang') );
+
+delete title
+where  rowid > (select min(rowid) from title
+                where title = 'Miracles on Ice')
+and    title = 'Miracles on Ice';                
+commit;
