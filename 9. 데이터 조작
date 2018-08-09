@@ -27,23 +27,23 @@ where
 
 2) Update : 테이블의 데이터 변경(수정)
 Update 테이블
-Set col=변경값 [, col=값] <-값 자리에 select 명령어 들어올 수 있음
-[where 조건] <-조건 없으면 특정 col의 전체 행을 값으로 변경
+Set col=변경값 [, col=값] <-값 자리에 select 명령어 들어올 수 있음, 값을 할당한다는 의미이기에 'in' 못씀
+[where col=값(select)] <-조건 없으면 특정 col의 전체 행을 값으로 변경
 -set col=null : null 값 지정
 -조건 절의 비교연산자 옆 값에 서브쿼리 지정 가능
 ★값자리에 select절 사용 가능
 
 3) 테이블에서 행 제거
-(1) delete [from] table : 테이블 전체 데이터 삭제
-[where 조건]
+(1) delete [from] table : 테이블 전체 행데이터 삭제
+[where 조건(select)]
 -특징: 조건 걸 수 있음, 변경 전 데이터 저장(rollback 사용가능)
 (2) truncate table 테이블이름
 -특징: 조건 못검, 과거 데이터 저장하지 않음
 
-4)commit: 저장, rollback: 마지막 저장으로 한꺼번에 되돌림(전체 단위로 back)
+4)commit: 저장, rollback: 마지막 저장으로 한꺼번에 되돌림(전체 단위로 back),
 savepoint -> rollback to savepoint 변수이름: 사진 찍어놓기
 
-다른 유저는 commit되지 않은 데이터 보지 못함(eg. command 창 <-> SQL developer 창)
+cf. 다른 유저는 commit되지 않은 데이터 보지 못함(eg. command 창 <-> SQL developer 창)
 
 */
 
