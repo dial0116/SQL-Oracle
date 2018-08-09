@@ -39,8 +39,69 @@ alter sequence 시퀀스이름
 increment by... <-start with 제외하고 모두 변경가능
 
 3) index 인덱스 개요
+빠른 검색을 위한 객체, 테이블 하나당 인덱스 여러개 존재
+eg. where 조건절에 있는 칼럼에 대한 인덱스들 
+-색인을 통한 데이터 검색
+<인덱스 구조: B (balanced)* tree index>
+인덱스 책: where 조건-> root: root보다 큰지 작은지 여부 결정-> branch: branch를 기준으로 root보다 작거나 큰 데이터를 저장함
+-> 데이터의 위치(정렬값): 조건+rowid(테이블 책 속 위치: 페이지와 행num) ※중복되는 데이터는 여러개로 저장
+cf. 테이블 수정시 index도 수정됨
+
+<인덱스 생성>
+자동: primary key, unique 제약조건을 정의시 <- 테이블에 들어오는 데이터의 유일성을 빠르게 체크하기 위해
+->drop constraint로 열의 제약조건이 없어지면 'drop index 인덱스명' 할 수 있음
+수동: create [unique] index 인덱스명 on 테이블명(where 조건에 걸리는 열이름, 열이름..) <-열 이름 여러개면 결합인덱스, 중복되는 데이터의 여부 결정
+where 조건에 걸린 결합된 값을 정렬하여 결합 인덱스 사용
+cf. ※하나의 테이블을 복제할때 not null을 제외한 다른 제약조건들은 복제가안됨
+cf2. like 에서는 숫자데이터를 문자데이터로 바꿔줌 eg. employee_id like '11%'
+대부분 실행계획 확인을 통해 인덱스 활용여부 확인
+unique index는 데이터 검색하여 찾으면 검색 중지(데이터가 하나밖에 없는걸 알기에)
+인덱스는 정렬하여 저장-> unique index 아닐경우 자신과 똑같은 데이터가 존재하는지 알기 위해 다음 데이터도 검색해봄
+<인덱스 생성 지침>
+-하나의 열에 많은/다양한 값이 저장된 경우
+-where 절에 자주 걸리는 경우
+<인덱스 제거> : 인덱스는 select 작업만 빠르게, dml작업은 느리게 만듦 eg. insert 시 각각의 인덱스 유지보수 해야함
+drop index 인덱스이름 : index 책을 제거
+
+4) 동의어
+<데이터 베이스 생성>
+sys(상위: DB 백업, startup) , system(하위): 관리자 유저
+접속 -> 새로만들기(hr_connect: password-oracle_4U / 접속이름: system_connect, 사용자 이름: system, password: oracle_4U, 비밀번호 저장 체크)
+create user: 일반 계정 hr -> 그 후 계정 locking -> 관리자계정으로 lock 품
+<배경>
+hr: 인사업무 테이블을 scott: 급여 가 사용 -> hr(user 이름).employee 테이블을 select 할 수 있는 권한 가짐
+동의어 : user이름.table이름 
+
+<동의어 생성 및 제거> : 긴 객체 이름을 짧게 만듦
+create/drop [public] synonym 동의어 <- public 안쓰면 private, 대부분 관리자가 공용으로 만듦
+for 객체
+
+
+1-2. 유저 엑세스 제어
+sys, system: 데이터 베이스 관리자 ->일반 데이터 유저 만들기->
+hr: 고객 유저, system_connect: 관리자 유저 <-username, password, 권한
+<유저 생성> (관리자 유저로 접속 후)
+create user 유저이름
+indentified by 패스워드
+account lock; <-원래는 unlock이 기본이며 password expired 시킴
+<유저 시스템 권한 부여> : DCL명령문-grant(권한부여), revoke(권한회수)
+grant
+create session: sql 명령창이 오픈되면 하나의 세션임 즉, DB접속 권한
+create table (<-index, drop 권한 포함)
+create sequence
+create view
+unlimited tablespace 
+select on 다른유저이름.다른유저의테이블
+to 유저이름
+<접속->새로만들기(scott_connect, scott, tiger, 비밀번호저장)->unlock작업->접속창->테이블없음->테이블생성->불가->권한부여
+cf. 여러페이지로 구성된 한권의 책: datafile, 여러개의 테이블(엑셀형태의 표) 내포 (페이지를 나누어서) -> 페이지의 공간을 사용하기 위한 권한 필요
+
+<다른 유저의 테이블 가져오기>
+insert into 테이블 이름 select 열이름 from 유저이름.다른 유저의 테이블 이름
+-> 다른 유저의 테이블 읽을 권한 필요 -> 권한 부여
 
 */
+
 --수업 코드 11
 --1) 뷰
 select department_id, job_id, avg_sal
@@ -106,6 +167,27 @@ values(dept_seq.nextval, 'BBB', null); --빈공간에 저장
 select * from member;
 select * from reservation;
 
+--3) 인덱스
+drop index SYS_C007028;
+
+create table emp_member
+as
+select * from employees;
+alter table emp_member add constraint emp_member_pk primary key(employee_id); --테이블 레벨에서 제약조건 추가하는 것처럼
+create index lname_fname_ix on emp_member(last_name, first_name);
+
+select * from emp_member
+where employee_id = 200; --unique scan
+select * from emp_member
+where last_name='King' and first_name='Steven'; --range scan
+select * from emp_member
+where department_id = 30; --table access full
+
+--4) 동의어
+create synonym e1 for hr.employees;
+select * from e1;
+
+
 --연습문제 11
 create sequence member_id_seq
 start with 101 increment by 1 ;
@@ -130,3 +212,77 @@ where  rowid > (select min(rowid) from title
                 where title = 'Miracles on Ice')
 and    title = 'Miracles on Ice';                
 commit;
+
+--(2)
+select *
+from employees
+where job_id='ST_CLERK' and hire_date>='01-JAN-06';
+-- where to_char(hire_date,'yyyy')>=2006 : ★※숫자, 문자 비교 경우, 문자는 숫자로 바뀜
+--<2005년 입사 사원정보>
+--where hire_date >= to_date('2005/01/01','yyyy/mm/dd') and hire_date < to_date('2006/01/01','yyyy/mm/dd') <- 색인 사용하기 위해 순수 열이 쓰인 조건절이 좋다
+--where to_char(hire_date,'yyyy')=2005
+--where hire_date like '%05' 
+
+select first_name, hire_date
+from employees 
+where to_char(hire_date,'dd')<16 ; --★※문자 데이터를 자동으로 숫자 변경
+
+select job_id, count(job_id)
+from departments d, employees e
+where d.department_id=e.department_id and d.department_name in ('Administration','Executive')
+group by job_id
+order by 2 desc;
+--where department_id in (select department_id from departments where department_name in ('Administration','Executive') )
+
+select *--조인,서브쿼리
+from (select d.department_id, d.department_name, count(*) from departments d, employees e where d.department_id=e.department_id 
+group by d.department_id, d.department_name order by 3 desc)
+where rownum=1;
+/* select d.department_id, d.department_name, count(*) from departments d, employees e where d.department_id=e.department_id 
+group by d.department_id, d.department_name having count(*)=(select max(count(*)) from employees group by department_id); */
+
+select j.job_id, j.job_title, decode(e.first_name,null,'사원없음',first_name)--**주관식
+--case when first_name is null then '사원없음' else first_name end
+from jobs j left outer join employees e
+on (j.job_id=e.job_id);
+
+update employees set job_id='SA_REP'
+where job_id ='SA_MAN';
+commit;
+
+--사원채용수가 가장 많은 요일에 채용된 사원 모두 표시
+select first_name , to_char(hire_date,'DAY')  from employees 
+where to_char(hire_date,'DAY')=(select to_char(hire_date,'DAY') from employees group by to_char(hire_date,'DAY')
+having count(*)= (select max(count(*)) from employees group by to_char(hire_date,'DAY')));
+--가장 어려움
+
+--참조
+select count(job_id)
+from employees
+group by job_id;
+select *
+from departments;
+select *
+from jobs;
+select to_char(hire_date,'DAY')
+from employees;
+
+# system connect(관리자 창)
+create user scott identified by tiger account lock; 
+grant create session to scott;
+alter user scott identified by tiger account unlock; --password 만료되기에 재설정 해야함(똑같아도 됨)
+grant create table, create view, create sequence to scott;
+grant unlimited tablespace to scott;
+grant select on hr.employees to scott;
+
+create public synonym ee for hr.employees;
+
+# scott connect(유저 )
+create table emp
+(empno number, ename varchar2(30));
+insert into emp
+select employee_id, first_name
+from hr.employees; --다른 유저이름 안쓰면 scott 유저의 테이블만 읽음, 다른 유저의 테이블 읽을 권한 필요
+select * from emp;
+
+select * from ee;
