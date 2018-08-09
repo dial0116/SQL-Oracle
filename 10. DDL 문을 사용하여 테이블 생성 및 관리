@@ -16,22 +16,60 @@ create table 테이블이름 (colname datatype(길이값), ...)
 (3) 데이터 유형(칼럼 내)
 varchar2(size): 가변길이 문자데이터, char(size): 고정길이 문자데이터(나머지공간을 공백으로 채움), number(소수점위 자릿수(소수점아래 포함), 소수점아래 자릿수): 가변길이 숫자데이터,
 date:고정길이 날짜데이터, clob: 큰 문자 데이터, blob: 큰 바이너리 데이터, rowid: 행의 위치 주소값
+cf. 고정자리의 데이터에는 char 데이터 유형으로 저장 eg. 우편번호: 5자리 <- 데이터 빠르게 읽기 위해 
 (4) datetime 날짜 데이터 유형: 
 date: 시분초까지 저장함
 timestamp: 시분초 단위 아래까지 보여줌 
-(5) 제약 조건 개요: column 속성 지정
-not null
-unique: null값을 허용, 한개의 테이블 당 여러개 사용가능
-primary key: null값 불허용, 한개의 테이블 당 하나만 사용가능, key값으로 사용가능(not null+unique들이 후보)
+
+(5) 제약 조건 개요: column 속성 지정, 데이터 한행마다 체크
+★not null
+★unique: 한칼럼에 대해 중복되는 데이터 입력 불가, null값을 허용, 한개의 테이블 당 여러개 사용가능
+★primary key: null값 불허용, 한개의 테이블 당 하나만 사용가능, key값으로 사용가능 (★not null+unique들이 후보), 여러개의 열 결합으로 구성될 수 있음
 테이블의 모든 데이터의 값은 primary key에 의존함
 ->아닌 값들은 분리시켜 새로운 primary key 생김->
-(아래는 우리나라는 DB에서 잘안씀)
-foreign key: 정규화로 인해 나타난 제약조건, 다른 테이블의 primary키를 참조(reference)해 오는 column
-check: column in ('A','B',...) 칼럼에 특정값 이외의 값 들어올 수 없게 만듦
+(아래는 우리나라는 DB에서 잘안씀, application에서는 사용)
+foreign key: 3정규화(PK에 종속되지 않는 데이터를 분리시키자)로 인해 나타난 제약조건, 다른 테이블의 primary키를 참조(reference)해 오는 column
+열 level: references 테이블이름(열이름) 
+테이블 level: foreign key (colname) references 테이블이름(열이름) 
+check: check(column in ('A','B',...)) 칼럼에 특정값 이외의 값 들어올 수 없게 만듦
 -테이블이 생성되는 시점이나 생성 후 선언
 -제약조건 이름 생성안되면 자동 
-(6) 테이블 휴지통 안거치고 삭제
+-on delete cascade : 참조하는 데이터 삭제시 참조되는 데이터 열 모두 삭제 
+-on delete set null : 참조하는 데이터 삭제시 참조되는 데이터 null로 변환
+-메인테이블에서 update, delete는 외래키에 영향받고 insert는 받지 않음 
+
+(6) 제약조건 사용법
+-열 level
+'column 데이터타입 길이' 옆에 각각 [constraint 제약조건지정이름] 제약조건
+-테이블 level (not null 선언은 불가)
+'column 데이터타입 길이' 옆에 ',' 찍고  [constraint 제약조건지정이름] 제약조건(colname)
+
+(7) 테이블 휴지통 안거치고 삭제
 drop table 테이블이름 purge; 
+
+(8) 테이블 복제
+create table 테이블이름 as select : select를 자동적으로 insert 함 (기존 테이블을 복제하여 새로운 테이블 만듦)
+※ 허용하지 않는 특수문자는 열이름으로 사용불가하기에 열이름 별도로 지정해주어야함
+-not null 만 복제되며 다른 제약조건은 복제 안됨
+
+3) 테이블 수정하기
+(1)alter table 문 <- 별로 많이 일어나지 않음
+-★새 열 추가 : alter table 테이블이름 add(열이름  데이터타입), 항상 마지막에 열 추가됨
+-★데이터의 길이값 수정 : alter table 테이블이름 modify (열이름  데이터타입(길이)) <-데이터의 타입은 변경 불가
+-새 열의 기본값 정의 : alter table 테이블이름 add(열이름  데이터타입 default 같은 데이터타입의 값) 
+-오라클이 암시적으로 넣어주는 null 대신 default 다음의 값을 넣어줌, 명시적으로 null 넣지 않은 경우
+-열 삭제 : alter table 테이블이름 drop column 열이름
+-열 이름 바꾸기 (절대 안함) : alter table 테이블이름 rename column 열의 기존이름 to 열의 새이름
+-읽기 전용 상태로 테이블 변경 : alter table 테이블이름 read only -> 읽기 쓰기 가능: alter table 테이블이름 read write
+
+4)테이블 삭제
+drop table 테이블이름: 테이블을 휴지통으로 보냄
+drop table 테이블이름 purge: 테이블을 영구적으로 삭제 (=윈도우에서 shift+삭제)
+<-> delete 테이블명: 테이블 안에 있는 데이터 삭제
+show recyclebin : 휴지통 안 파일(+구조)을 보여줌
+삭제후 휴지통의 관리되는 이름으로 select하여 볼 수 있음
+flashback table 테이블이름 to before drop : 복원작업
+
 */
 --수업코드 10
 create table emp_sample
@@ -54,7 +92,7 @@ create table dept_test
 (deptno number constraint deptno_pk primary key, --constraint 제약조건이름 제약조건타입
  dname varchar2(30) not null, --제약조건타입만
  loc varchar2(30)) ;
-  create table student
+ create table student
  ( student_id number, student_name varchar2(20), grade varchar2(2), 
  dept_id number constraint dept_id_fk references dept_test(deptno), --column level에서는 foreign key 안써주고 바로 references 씀
  constraint student_pk primary key(student_id), constraint grade_ch check(grade in ('A','B','C'))); 
@@ -75,3 +113,71 @@ create table dept_test
  commit;
  
  select * from emp_test;
+ 
+ --외래키 제약조건 걸기
+ select * from emp2;
+ create table emp1
+ (empno number primary key,
+ ename varchar2(30) not null,
+ deptno number references dept_test(deptno) on delete cascade);
+ insert into emp1
+ select employee_id, first_name, department_id
+ from employees;
+ update dept_test set deptno=350
+ where deptno = 10; 
+ delete emp1 where empno=102;
+ insert into dept_test values(300,'Testing',null);
+ delete dept_test where deptno=50;
+
+ create table emp2
+ (empno number primary key,
+ ename varchar2(30) not null,
+ deptno number references dept_test(deptno) on delete set null);
+ insert into emp2
+ select employee_id, first_name, department_id
+ from employees;
+ commit;
+ 
+ --create table 테이블이름 select as
+ create table sample1
+ as select * from employees;
+ create table sample2
+ as select department_id deptno, job_id job, avg(salary) avg_sal --특수문자 '()'는 칼럼이름으로 쓰일 수 없음
+ from employees group by department_id, job_id order by department_id, job_id;
+ select * from sample1;
+ select * from sample2;
+ 
+ -- 테이블 변경
+ select * from sample2;
+ alter table sample2 add (emp_cnt number); --새 열 추가
+ describe dept; --describe
+ alter table sample2 modify (job varchar2(20)); --데이터 길이값 변경
+ 
+ select * from dept_test;
+ alter table dept_test add(create_dt date default sysdate); --새 열 추가하며 기본값 설정
+ alter table dept_test drop column create_dt; --열삭제
+ alter table dept_test rename column deptno to dept_id; --열이름 변경
+ alter table sample2 read only; --읽기 전용 테이블로 변경
+ delete sample2; --불가
+ alter table sample2 read write; --읽기 쓰기 가능
+ 
+ -- 테이블 삭제
+ drop table sample1;
+ show recyclebin;  --휴지통 안 파일 보여줌 
+ select * from "BIN$ejs54cXlTmyiKfsKsUXw4Q==$0";
+ flashback table sample1 to before drop; --복원작업
+ drop table sample2 purge;
+ 
+--연습문제 10 
+--테이블 생성
+create table member 
+(member_id number(10) primary key, last_name varchar2(25) not null unique, first_name varchar2(25),
+address varchar2(100), city varchar2(30), phone varchar2(15), join_date date default sysdate not null );
+
+create table title
+(title_id number(10) primary key, title varchar2(60) not null, description varchar2(400) not null, rating varchar2(4), 
+category varchar2(20) check(category in ('DRAMA','COMEDY','ACTION','CHILD','DOCU')), release_date date );
+
+create table reservation
+(res_date date, member_id number(10) references member(member_id), title_id number(10) references title(title_id),
+constraint reservation_pk primary key(res_date, member_id, title_id)); --primary key 가 결합된 경우 테이블 level에 제약조건 써야함
